@@ -1,0 +1,307 @@
+\documentclass[11pt,a4paper]{article}
+\usepackage[a4paper,margin=2.4cm]{geometry}
+\usepackage{amsmath}
+\usepackage{enumitem}
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{pgfplots}
+\pgfplotsset{compat=1.18}
+\setlist[itemize]{itemsep=2pt,topsep=3pt}
+\setlength{\abovecaptionskip}{4pt}
+
+% Placeholder for a TORA screenshot. Replace the \fbox line with
+% \includegraphics[width=\linewidth]{<file>} once the screenshot is taken.
+\newcommand{\torashot}[1]{%
+  \fbox{\parbox[c][3.1cm][c]{0.94\linewidth}{\centering\small TORA screenshot:\\ #1}}}
+
+\title{\textbf{Core Pricing in Learned Assignment Markets}}
+\author{Anirudh Jain \and Ayush Pandey \and Sourabh}
+\date{}
+
+\begin{document}
+\vspace{-2em}
+\maketitle
+\vspace{-1.5em}
+
+\begin{quote}
+\textbf{When a ride-hailing platform matches riders to drivers using predicted (noisy) surplus values, how much do the optimal matching and the stable (core) prices change with prediction error, can riders or drivers gain by misreporting, and which stable price should the platform choose?}
+\end{quote}
+
+\noindent\textbf{Modelling assumption.} We do not train a model. A machine-learned estimate of the surplus is taken to be the true surplus plus independent Gaussian error, $\hat a_{ij}=\max(a_{ij}+\varepsilon_{ij},0)$ with $\varepsilon_{ij}\sim N(0,\sigma^2)$, since any predictor is the truth plus some error.
+
+\section{The Core: Matching LP, Dual Prices and the Core}
+
+Let $a_{ij}\ge 0$ be the surplus (rider value minus driver cost) when rider $i$ rides with driver $j$, and $x_{ij}=1$ if they are matched. The platform solves
+\[
+V=\max \sum_{i,j} a_{ij}x_{ij}
+\quad\text{s.t.}\quad
+\sum_j x_{ij}\le 1\;\;(\text{rider } i),\qquad \sum_i x_{ij}\le 1\;\;(\text{driver } j),\qquad x\ge 0 .
+\]
+The constraint matrix is totally unimodular, so the simplex method returns $x_{ij}\in\{0,1\}$. The dual is
+\[
+\min \sum_i u_i+\sum_j v_j
+\quad\text{s.t.}\quad
+u_i+v_j\ge a_{ij},\qquad u,v\ge 0 .
+\]
+We read $u_i$ and $v_j$ as the shares of the surplus that rider $i$ and driver $j$ keep, which fixes the price. If $u_i+v_j<a_{ij}$, the pair $(i,j)$ could leave and split $a_{ij}$ between themselves, so they block. Shapley and Shubik~\cite{shapley} showed that the core, the set of non-negative payoffs that no pair blocks and that add up to exactly $V$, is the set of optimal dual solutions. By complementary slackness a matched pair splits its own surplus exactly ($u_i+v_j=a_{ij}$) and an unmatched agent gets 0.
+
+\textbf{Three core points.} The dual is degenerate, so the core is a whole segment of prices for one matching. Write $V_{-i}$ for the optimal value with rider $i$ removed. The rider-optimal point RO gives every rider their marginal contribution $u_i=V-V_{-i}$, and each matched driver gets the rest, $v_j=a_{ij}-u_i$. The driver-optimal point DO does the same with $v_j=V-V_{-j}$. MID is their average. Each share lies in a range, $u_i\in[u_i^{DO},u_i^{RO}]$ and $v_j\in[v_j^{RO},v_j^{DO}]$. We checked these formulas against an LP solver on every instance used here.
+
+\textbf{Worked instance.} Our main instance has three riders and three drivers,
+\[
+B=\begin{pmatrix}12&10&6\\11&7&4\\9&11&9\end{pmatrix},\qquad V=30,\quad \text{matching } R1\text{--}D2,\; R2\text{--}D1,\; R3\text{--}D3 .
+\]
+The other five matchings are worth 28, 28, 27, 23 and 22. Table~\ref{tab:core} and Figure~\ref{fig:ranges} give the three core points. Every range has width 7, and the riders' total runs from 3 at DO to 24 at RO, so the choice inside the core moves 21 of the 30 units between the two sides without changing the matching. The smaller instance $A=\begin{pmatrix}10&6\\7&4\end{pmatrix}$ gives $V=14$, RO $u=(7,4)$, $v=(3,0)$ and DO $u=(2,0)$, $v=(8,4)$.
+
+\begin{table}[h]
+\centering\small
+\begin{tabular}{lccccccc}
+\toprule
+Point & $u_1$ & $u_2$ & $u_3$ & $v_1$ & $v_2$ & $v_3$ & $\sum u$ \\
+\midrule
+RO  & 8   & 7   & 9   & 4   & 2   & 0   & 24 \\
+MID & 4.5 & 3.5 & 5.5 & 7.5 & 5.5 & 3.5 & 13.5 \\
+DO  & 1   & 0   & 2   & 11  & 9   & 7   & 3 \\
+\bottomrule
+\end{tabular}
+\caption{Core points of instance $B$. Each row sums to $V=30$ and satisfies every $u_i+v_j\ge a_{ij}$.}
+\label{tab:core}
+\end{table}
+
+\begin{figure}[h]
+\centering
+\begin{tikzpicture}
+\begin{axis}[
+  width=0.82\textwidth, height=4.6cm,
+  xmin=-0.5, xmax=12, ymin=0.4, ymax=7,
+  ytick={1,...,6}, yticklabels={D3,D2,D1,R3,R2,R1},
+  xlabel={share of the surplus}, xtick={0,2,...,12},
+  xmajorgrids, grid style={gray!25}, tick label style={font=\small}, label style={font=\small}]
+\foreach \y/\lo/\mid/\hi in {6/1/4.5/8, 5/0/3.5/7, 4/2/5.5/9, 3/4/7.5/11, 2/2/5.5/9, 1/0/3.5/7} {
+  \edef\temp{\noexpand\draw[line width=4pt, gray!35] (axis cs:\lo,\y) -- (axis cs:\hi,\y);
+    \noexpand\draw[thick] (axis cs:\lo,\y-0.25) -- (axis cs:\lo,\y+0.25);
+    \noexpand\draw[thick] (axis cs:\hi,\y-0.25) -- (axis cs:\hi,\y+0.25);
+    \noexpand\fill (axis cs:\mid,\y) circle (2pt);}
+  \temp
+}
+\node[font=\scriptsize, above] at (axis cs:8,6.2) {RO};
+\node[font=\scriptsize, above] at (axis cs:1,6.2) {DO};
+\node[font=\scriptsize, above] at (axis cs:4.5,6.2) {MID};
+\node[font=\scriptsize, above] at (axis cs:4,3.2) {RO};
+\node[font=\scriptsize, above] at (axis cs:11,3.2) {DO};
+\end{axis}
+\end{tikzpicture}
+\caption{Core range of each agent's share in instance $B$. Riders' ranges run from DO (left) to RO (right), drivers' ranges the other way; the dot is MID.}
+\label{fig:ranges}
+\end{figure}
+
+\textbf{Link to sensitivity analysis.} Let $V(b)$ be the optimal value when rider $i$'s capacity (right-hand side) is $b$ instead of 1. $V(b)$ is concave and piecewise linear, and at $b=1$ its left slope is the largest optimal dual value of that constraint and its right slope the smallest. So the core range of rider $i$ is exactly the gap between the two one-sided shadow prices. For rider 1 of $B$ the left slope is $V-V_{-1}=30-22=8$ and the right slope is 1. A simplex code reports one dual value from this range. The final basis is degenerate (some basic variable equals 0), and whenever the two slopes differ the allowable increase or decrease of that right-hand side is 0 on at least one side. That zero is the same fact as the core range.
+
+\textbf{Hungarian method on $B$.} Maximising $a$ is minimising $K-a$ with $K=12$. Row reduction, column reduction and one adjustment (two covering lines $<3$, smallest uncovered entry 2) give
+\[
+\begin{pmatrix}0&2&6\\1&5&8\\3&1&3\end{pmatrix}\!\to\!
+\begin{pmatrix}0&2&6\\0&4&7\\2&0&2\end{pmatrix}\!\to\!
+\begin{pmatrix}0&2&4\\0&4&5\\2&0&0\end{pmatrix}\!\to\!
+\begin{pmatrix}0&\mathbf{0}&2\\\mathbf{0}&2&3\\4&0&\mathbf{0}\end{pmatrix},
+\]
+and the bold zeros give R1--D2, R2--D1, R3--D3 with cost $36-30=6$, the same matching as the LP.
+
+\textbf{Syllabus map.}
+\begin{itemize}
+  \item \textbf{Formulation and simplex:} assignment LP; RO and DO LPs with $\ge$ and $=$ constraints, solved by the M-method or two-phase method.
+  \item \textbf{Duality and sensitivity:} the core is the dual optimum; core ranges are the degenerate shadow-price gaps.
+  \item \textbf{Transportation and assignment:} the matching as a balanced transportation problem (northwest corner, least cost, Vogel) and by the Hungarian method.
+  \item \textbf{Game theory:} pure saddle point test, graphical method for a $3\times2$ game, and the game as an LP.
+\end{itemize}
+
+\section{Relationship to TORA: Hand Solutions and Code}
+
+Every small LP is solved by hand in TORA~\cite{taha}: the primal assignment LP for $A$ (4 variables, 4 constraints) and $B$ (9 variables, 6 constraints), where we read the iterations, the final tableau with its zero-valued basic variable, the dual values and the sensitivity table; the RO and DO LPs (maximise or minimise $\sum u_i$ subject to $u_i+v_j\ge a_{ij}$ and $\sum u+\sum v=V$), which need artificial variables; the same assignment as a balanced transportation problem with supplies and demands 1 and cost $K-a$, from all three starting solutions; and the platform game as an LP (Section~3.3). The code does what TORA cannot repeat by hand: thousands of noisy re-solves, every misreport, and the theorem check. On the small instances the code and TORA must agree; Table~\ref{tab:tora} lists the values to compare.
+
+\begin{table}[h]
+\centering\small
+\begin{tabular}{lcc@{\hspace{2.5em}}lcc}
+\toprule
+Quantity & Computed & TORA & Quantity & Computed & TORA \\
+\midrule
+$A$ primal $z$     & 14 & to be filled & $B$ primal $z$     & 30 & to be filled \\
+$A$ RO LP $z$      & 11 & to be filled & $B$ RO LP $z$      & 24 & to be filled \\
+$A$ DO LP $z$      & 2  & to be filled & $B$ DO LP $z$      & 3  & to be filled \\
+$A$ transport cost & 6  & to be filled & $B$ transport cost & 6  & to be filled \\
+$A$ duals in core? & yes & to be filled & $B$ duals in core? & yes & to be filled \\
+Game LP $w$        & 2  & to be filled & Game value $w-1$   & 1  & to be filled \\
+\bottomrule
+\end{tabular}
+\caption{Computed values and the matching TORA outputs. ``Duals in core'' means the dual values TORA prints satisfy $u_i+v_j\ge a_{ij}$ and sum to $V$.}
+\label{tab:tora}
+\end{table}
+
+\begin{figure}[h]
+\centering
+\begin{minipage}{0.48\textwidth}\centering
+\torashot{primal LP of $B$, final tableau}
+\end{minipage}\hfill
+\begin{minipage}{0.48\textwidth}\centering
+\torashot{primal LP of $B$, sensitivity analysis}
+\end{minipage}
+
+\vspace{0.6em}
+\begin{minipage}{0.48\textwidth}\centering
+\torashot{RO LP of $B$, M-method final iteration}
+\end{minipage}\hfill
+\begin{minipage}{0.48\textwidth}\centering
+\torashot{DO LP of $B$, M-method final iteration}
+\end{minipage}
+
+\vspace{0.6em}
+\begin{minipage}{0.48\textwidth}\centering
+\torashot{transportation model of $B$, Vogel start and optimum}
+\end{minipage}\hfill
+\begin{minipage}{0.48\textwidth}\centering
+\torashot{platform game LP, final solution}
+\end{minipage}
+\caption{TORA output for instance $B$ and the platform game.}
+\label{fig:tora}
+\end{figure}
+
+\section{Selected Progress: Noise, Misreporting and the Pricing Game}
+
+All numbers in this section come from our code, with seed 1 and 4000 draws per $\sigma$.
+
+\subsection{Stability under prediction error}
+
+For each draw we add noise to $B$, solve the estimated market, and compare with the truth. Table~\ref{tab:noise} and Figure~\ref{fig:noise} show the results.
+
+\begin{table}[h]
+\centering\small
+\begin{tabular}{lcccccc}
+\toprule
+$\sigma$ & P(matching changes) & Mean surplus lost & \multicolumn{3}{c}{Mean price shift ($L_1$)} & P(some pair blocks) \\
+ & & & RO & MID & DO & MID \\
+\midrule
+0.25 & 0.000 & 0.000 & 1.66 & 1.34 & 1.67 & 0.967 \\
+0.5  & 0.047 & 0.100 & 3.26 & 2.61 & 3.18 & 0.967 \\
+1    & 0.297 & 0.651 & 5.63 & 4.39 & 5.02 & 0.954 \\
+2    & 0.537 & 1.278 & 9.15 & 6.82 & 7.73 & 0.885 \\
+\bottomrule
+\end{tabular}
+\caption{Noise study on $B$ ($V=30$). With $\sigma=0$ every entry is exactly 0.}
+\label{tab:noise}
+\end{table}
+
+\begin{figure}[h]
+\centering
+\begin{tikzpicture}
+\begin{axis}[
+  name=left, width=0.45\textwidth, height=5cm,
+  xmin=0, xmax=3, ymin=0, ymax=1.8,
+  xlabel={$\sigma$}, grid=major, grid style={gray!25},
+  tick label style={font=\small}, label style={font=\small},
+  title={\small (a) matching}]
+\addplot[thick, black, mark=*, mark size=1.2pt] coordinates {(0,0) (0.25,0) (0.5,0.047) (0.75,0.181) (1,0.297) (1.5,0.457) (2,0.537) (2.5,0.595) (3,0.629)};
+\node[font=\scriptsize, anchor=south east] at (axis cs:3,0.66) {P(change)};
+\addplot[thick, dashed, black] coordinates {(0,0) (0.25,0) (0.5,0.100) (0.75,0.394) (1,0.651) (1.5,1.034) (2,1.278) (2.5,1.509) (3,1.687)};
+\node[font=\scriptsize, anchor=south east] at (axis cs:1.45,1.1) {surplus lost};
+\end{axis}
+\begin{axis}[
+  at={(left.east)}, anchor=west, xshift=1.2cm,
+  width=0.45\textwidth, height=5cm, clip=false,
+  xmin=0, xmax=3, ymin=0, ymax=13,
+  xlabel={$\sigma$}, grid=major, grid style={gray!25},
+  tick label style={font=\small}, label style={font=\small},
+  title={\small (b) mean price shift}]
+\addplot[thin, black] coordinates {(0,0) (0.25,1.658) (0.5,3.261) (0.75,4.565) (1,5.630) (1.5,7.476) (2,9.147) (2.5,10.744) (3,12.251)};
+\addplot[thin, dashed, black] coordinates {(0,0) (0.25,1.673) (0.5,3.183) (0.75,4.221) (1,5.022) (1.5,6.420) (2,7.731) (2.5,9.042) (3,10.361)};
+\addplot[very thick, black] coordinates {(0,0) (0.25,1.343) (0.5,2.606) (0.75,3.602) (1,4.389) (1.5,5.668) (2,6.825) (2.5,7.987) (3,9.176)};
+\node[font=\scriptsize, anchor=west] at (axis cs:3,12.25) {RO};
+\node[font=\scriptsize, anchor=west] at (axis cs:3,10.36) {DO};
+\node[font=\scriptsize, anchor=west] at (axis cs:3,9.0) {MID};
+\end{axis}
+\end{tikzpicture}
+\caption{Instance $B$ under noise. (a) Chance that the estimated matching differs from the true one, and the mean surplus lost. (b) Mean $L_1$ distance between estimated and true prices for each core point.}
+\label{fig:noise}
+\end{figure}
+
+\begin{itemize}
+  \item The matching is safe for small errors: the second-best matching is 2 units below the best, so at $\sigma=0.25$ it never changes. At $\sigma=1$ it changes in 30\% of draws, yet only 0.65 of the 30 units (2\%) are lost, because the wrong matching is a near-optimal one.
+  \item Prices are far less stable than the matching value. At $\sigma=1$ the six shares move by 4.4 to 5.6 in total, seven to nine times the surplus lost. MID moves least at every $\sigma$.
+  \item Prices computed from estimates are almost never exactly stable for the true values: for every $\sigma\le2$, in at least 88\% of draws some true pair has $u_i+v_j<a_{ij}$, usually by a small amount. This happens because several core constraints are tight, so any error pushes one of them the wrong way.
+\end{itemize}
+
+\subsection{Misreporting}
+
+One rider shifts their own row, or one driver their own column, by $s\in\{-2,-1,1,2\}$. The platform re-solves the reported matrix and prices it with a fixed rule, and the agent's true payoff is the true surplus with their new partner minus the partner's share. The gain is that payoff minus the truthful payoff. There are $6\times4=24$ cases per rule.
+
+\begin{table}[h]
+\centering\small
+\begin{tabular}{lccc}
+\toprule
+Rule & Best rider gain & Best driver gain & Cases with a positive gain \\
+\midrule
+RO  & 0 & 2 & 2 of 24 \\
+MID & 1 & 1 & 5 of 24 \\
+DO  & 2 & 0 & 3 of 24 \\
+\bottomrule
+\end{tabular}
+\caption{Best gain from one misreport in instance $B$.}
+\label{tab:manip}
+\end{table}
+
+RO pays each rider their marginal contribution, so no rider can gain under RO, and by symmetry no driver can gain under DO, as Leonard~\cite{leonard} and Demange, Gale and Sotomayor~\cite{dgs} proved. Table~\ref{tab:manip} confirms it, and over 200 random $4\times4$ markets (entries uniform on $[1,20]$, shifts $\pm0.5,\pm1,\pm2$) the largest such gain was 0. The protection is one-sided: under RO driver D3 gains 2 by understating by 2, and under DO rider R2 gains 2 the same way. Every profitable misreport we found is an understatement. MID halves the worst gain to 1 on each side.
+
+\subsection{Which price should the platform choose?}
+
+The platform picks RO, MID or DO, a manipulator picks which side to act on, and the payoff is the best gain from Table~\ref{tab:manip}. The platform minimises:
+\[
+M=\begin{array}{c|cc}
+ & \text{riders} & \text{drivers}\\\hline
+\text{RO} & 0 & 2\\
+\text{MID} & 1 & 1\\
+\text{DO} & 2 & 0
+\end{array}
+\qquad
+\min_i\max_j m_{ij}=1,\quad \max_j\min_i m_{ij}=0 .
+\]
+The two differ, so there is no pure saddle point. If the manipulator targets riders with probability $y$, the three rules give $2-2y$, $1$ and $2y$; the platform answers on the lower envelope, whose highest point is $y=\tfrac12$ with value 1 (Figure~\ref{fig:game}). The value of the game is 1. The manipulator mixes half and half, and the platform is optimal with pure MID or with half RO and half DO, both of which cap the gain at 1. As an LP with every payoff raised by 1 so that TORA's variables stay non-negative, the platform minimises $w$ subject to $p_1+2p_2+3p_3\le w$, $3p_1+2p_2+p_3\le w$, $p_1+p_2+p_3=1$, which gives $w=2$ and value $2-1=1$. The textbook game $\begin{pmatrix}3&-1\\-2&4\end{pmatrix}$ checks the solver: value 1, row mix $(0.6,0.4)$, column mix $(0.5,0.5)$.
+
+\begin{figure}[h]
+\centering
+\begin{tikzpicture}
+\begin{axis}[
+  width=0.6\textwidth, height=5cm,
+  xmin=0, xmax=1, ymin=0, ymax=2.2,
+  xlabel={$y$ = probability the manipulator targets riders}, ylabel={expected best gain},
+  grid=major, grid style={gray!25}, tick label style={font=\small}, label style={font=\small}]
+\addplot[thin, black, domain=0:1] {2-2*x};
+\addplot[thin, black, domain=0:1] {1};
+\addplot[thin, black, domain=0:1] {2*x};
+\addplot[ultra thick, black] coordinates {(0,0) (0.5,1) (1,0)};
+\fill (axis cs:0.5,1) circle (2.5pt);
+\node[font=\scriptsize, anchor=south west] at (axis cs:0.02,1.9) {RO};
+\node[font=\scriptsize, anchor=south east] at (axis cs:0.98,1.9) {DO};
+\node[font=\scriptsize, anchor=south east] at (axis cs:0.98,1.0) {MID};
+\node[font=\scriptsize, anchor=south] at (axis cs:0.5,1.08) {value 1};
+\end{axis}
+\end{tikzpicture}
+\caption{Graphical method for the pricing game. The thick line is the platform's lower envelope.}
+\label{fig:game}
+\end{figure}
+
+\textbf{Answer.} On this market MID is the platform's best single choice: it is optimal in the game, it is the only pure rule that caps the gain at 1 on both sides, and it moves least under prediction error. RO or DO is right only when the platform knows which side might misreport.
+
+\textbf{Limits.} We use one $3\times3$ instance for the noise and game results, a small grid of single-agent misreports, i.i.d.\ Gaussian noise on every entry, and no trained model. Markets with more agents, correlated errors or groups of misreporting agents may behave differently.
+
+{\footnotesize
+\begin{thebibliography}{9}
+\setlength{\itemsep}{0pt}
+\bibitem{shapley} L. S. Shapley and M. Shubik. The assignment game I: The core. \emph{International Journal of Game Theory}, 1:111--130, 1971.
+\bibitem{leonard} H. B. Leonard. Elicitation of honest preferences for the assignment of individuals to positions. \emph{Journal of Political Economy}, 91(3):461--479, 1983.
+\bibitem{dgs} G. Demange, D. Gale and M. Sotomayor. Multi-item auctions. \emph{Journal of Political Economy}, 94(4):863--872, 1986.
+\bibitem{taha} H. A. Taha. \emph{Operations Research: An Introduction}. Pearson, 10th edition, 2017.
+\end{thebibliography}
+}
+
+\section*{Project Repository}
+\texttt{https://github.com/<user>/<repo>}
+
+\end{document}
