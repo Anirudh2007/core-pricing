@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Core Pricing in Learned Assignment Markets</title>
+<meta name="description" content="Optimal matching and core prices of a small ride-hailing market, and how they react to prediction error and misreporting.">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<main>
+  <header class="top">
+    <p class="kicker">DSC-13 Innovation Project, LPP and Game Theory</p>
+    <h1>Core Pricing in Learned Assignment Markets</h1>
+    <p class="question">When a ride-hailing platform matches riders to drivers using predicted (noisy) surplus values, how much do the optimal matching and the stable (core) prices change with prediction error, can riders or drivers gain by misreporting, and which stable price should the platform choose?</p>
+    <p class="note">A predicted surplus is modelled as the true surplus plus Gaussian error. Everything below is computed in your browser.</p>
+  </header>
+
+  <section id="matrix" aria-labelledby="h-matrix">
+    <h2 id="h-matrix"><span class="n">1</span>Surplus matrix and optimal matching</h2>
+    <p class="lead">Entry a<sub>ij</sub> is rider i's value minus driver j's cost. The assignment LP picks the matching with the largest total. Matched pairs are shaded.</p>
+    <div class="controls" role="group" aria-label="Presets and size">
+      <button type="button" data-preset="A">Instance A (2&times;2)</button>
+      <button type="button" data-preset="B">Instance B (3&times;3)</button>
+      <button type="button" data-size="row+">Add rider</button>
+      <button type="button" data-size="row-">Remove rider</button>
+      <button type="button" data-size="col+">Add driver</button>
+      <button type="button" data-size="col-">Remove driver</button>
+    </div>
+    <div id="matrix-view"></div>
+  </section>
+
+  <section id="ranges" aria-labelledby="h-ranges">
+    <h2 id="h-ranges"><span class="n">2</span>Core prices</h2>
+    <p class="lead">Each bar is the range of one agent's share over all core (stable) price vectors, the optimal solutions of the dual LP. RO is the rider-optimal point, DO the driver-optimal point and MID their average.</p>
+    <div id="ranges-view"></div>
+  </section>
+
+  <section id="noise" aria-labelledby="h-noise">
+    <h2 id="h-noise"><span class="n">3</span>Prediction error</h2>
+    <p class="lead">Each draw adds N(0, &sigma;<sup>2</sup>) error to every entry, re-solves on the estimate and compares with the truth (seed 1).</p>
+    <div class="controls">
+      <label for="sigma">&sigma; <output id="sigma-out" for="sigma">1.00</output></label>
+      <input id="sigma" type="range" min="0" max="3" step="0.05" value="1">
+      <label for="draws">Draws</label>
+      <select id="draws"><option>500</option><option selected>2000</option><option>4000</option></select>
+    </div>
+    <div id="noise-view" aria-live="polite"></div>
+  </section>
+
+  <section id="manip" aria-labelledby="h-manip">
+    <h2 id="h-manip"><span class="n">4</span>Misreporting</h2>
+    <p class="lead">One rider shifts their own row, or one driver their own column, by &minus;2, &minus;1, 1 or 2. Gain is the true payoff under the false report minus the truthful payoff. Select a cell for details.</p>
+    <div id="manip-view"></div>
+  </section>
+
+  <section id="game" aria-labelledby="h-game">
+    <h2 id="h-game"><span class="n">5</span>Which price should the platform choose?</h2>
+    <p class="lead">A zero-sum game: the platform picks RO, MID or DO, a manipulator picks the riders' or the drivers' side, and the payoff is the best gain from section 4. The platform minimises.</p>
+    <div id="game-view"></div>
+  </section>
+
+  <footer>Anirudh Jain, Ayush Pandey, Sourabh. MIT licence.</footer>
+</main>
+<script type="module" src="app.js"></script>
+</body>
+</html>
