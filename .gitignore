@@ -13,10 +13,6 @@ report/*.synctex.gz
 report/*.toc
 report/*.pdf
 
-# local notes and editor folders
-.claude/
-CLAUDE.md
-AGENTS.md
-PROGRESS.md
+# editor folders
 .vscode/
 .idea/
