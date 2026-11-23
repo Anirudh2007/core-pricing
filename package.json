@@ -1,0 +1,15 @@
+{
+  "name": "core-pricing",
+  "version": "1.0.0",
+  "description": "Core pricing in learned assignment markets: optimal matching, core prices, noise, manipulation and a pricing game",
+  "type": "module",
+  "license": "MIT",
+  "author": "Anirudh Jain, Ayush Pandey, Sourabh",
+  "engines": { "node": ">=20" },
+  "scripts": {
+    "test": "node --test",
+    "check": "node scripts/check-targets.mjs",
+    "tora-check": "node tora/check.mjs",
+    "start": "node scripts/serve.mjs"
+  }
+}

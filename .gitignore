@@ -1,0 +1,22 @@
+node_modules/
+.DS_Store
+Thumbs.db
+*.log
+
+# latex build output
+report/*.aux
+report/*.log
+report/*.out
+report/*.fls
+report/*.fdb_latexmk
+report/*.synctex.gz
+report/*.toc
+report/*.pdf
+
+# local notes and editor folders
+.claude/
+CLAUDE.md
+AGENTS.md
+PROGRESS.md
+.vscode/
+.idea/
