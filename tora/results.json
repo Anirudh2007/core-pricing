@@ -1,0 +1,15 @@
+{
+  "A": {
+    "primal": { "z": null, "iterations": null, "u": null, "v": null },
+    "RO": { "z": null },
+    "DO": { "z": null },
+    "transport": { "northwest": null, "leastCost": null, "vogel": null, "optimal": null }
+  },
+  "B": {
+    "primal": { "z": null, "iterations": null, "u": null, "v": null },
+    "RO": { "z": null },
+    "DO": { "z": null },
+    "transport": { "northwest": null, "leastCost": null, "vogel": null, "optimal": null }
+  },
+  "game": { "w": null, "p": null }
+}
