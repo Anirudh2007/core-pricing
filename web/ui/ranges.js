@@ -1,65 +1,71 @@
 import { corePoints } from '../lib/core.js'
 import { fmt } from './matrix.js'
+import { pricesAt } from './market.js'
 
-export function renderRanges(root, a) {
-  const p = corePoints(a)
-  const agents = [
-    ...p.RO.u.map((_, i) => ({ name: `R${i + 1}`, RO: p.RO.u[i], MID: p.MID.u[i], DO: p.DO.u[i] })),
-    ...p.RO.v.map((_, j) => ({ name: `D${j + 1}`, RO: p.RO.v[j], MID: p.MID.v[j], DO: p.DO.v[j] })),
+const SIDE = { R: { fill: '#dce7f8', ink: '#1d5bbf' }, D: { fill: '#f6e5d3', ink: '#a8520a' } }
+
+function agents(p) {
+  return [
+    ...p.RO.u.map((_, i) => ({ name: `R${i + 1}`, side: 'R', RO: p.RO.u[i], MID: p.MID.u[i], DO: p.DO.u[i] })),
+    ...p.RO.v.map((_, j) => ({ name: `D${j + 1}`, side: 'D', RO: p.RO.v[j], MID: p.MID.v[j], DO: p.DO.v[j] })),
   ]
-  const rows = agents
-    .map((g) => `<tr><th scope="row">${g.name}</th><td>${fmt(g.RO)}</td><td>${fmt(g.MID)}</td><td>${fmt(g.DO)}</td><td>${fmt(Math.abs(g.RO - g.DO))}</td></tr>`)
+}
+
+export function renderRangeTable(root, a) {
+  const p = corePoints(a)
+  const rows = agents(p)
+    .map((g) => `<tr><th scope="row" style="color:${SIDE[g.side].ink}">${g.name}</th><td>${fmt(g.RO)}</td><td>${fmt(g.MID)}</td><td>${fmt(g.DO)}</td><td>${fmt(Math.abs(g.RO - g.DO))}</td></tr>`)
     .join('')
-  const total = (u) => fmt(u.reduce((s, v) => s + v, 0))
+  root.innerHTML = `<h3>Shares at each point</h3><div class="wrap"><table class="tbl">
+    <thead><tr><th scope="col">Agent</th><th scope="col">RO</th><th scope="col">MID</th><th scope="col">DO</th><th scope="col">Width</th></tr></thead>
+    <tbody>${rows}</tbody></table></div>`
+}
 
-  root.innerHTML = `<div class="split">
-    <figure>
-      <div class="plot"></div>
-      <figcaption id="ranges-cap">Core range of each agent's share, riders R and drivers D. The table lists the same numbers.</figcaption>
-    </figure>
-    <div class="wrap"><table>
-      <thead><tr><th scope="col">Agent</th><th scope="col">RO</th><th scope="col">MID</th><th scope="col">DO</th><th scope="col">Width</th></tr></thead>
-      <tbody>${rows}</tbody></table>
-      <p class="stat">Riders' total: RO <strong>${total(p.RO.u)}</strong>, DO <strong>${total(p.DO.u)}</strong>.</p>
-    </div></div>`
+export function renderRanges(root, a, t) {
+  const p = corePoints(a)
+  const list = agents(p)
+  const now = pricesAt(p, t)
+  const at = [...now.u, ...now.v]
+  const max = Math.max(1, ...list.flatMap((g) => [g.RO, g.DO]))
 
-  const plot = root.querySelector('.plot')
-  const max = Math.max(1, ...agents.flatMap((g) => [g.RO, g.DO]))
-  const W = Math.max(plot.clientWidth, 260)
-  const left = 36
-  const right = 16
-  const top = 30
-  const rowH = 38
-  const H = top + agents.length * rowH + 24
-  const x = (s) => left + (s / max) * (W - left - right)
-
-  const step = max > 12 ? 5 : max > 5 ? 2 : 1
-  let grid = ''
-  for (let s = 0; s <= max; s += step) {
-    grid += `<line class="grid" x1="${x(s)}" x2="${x(s)}" y1="${top - 8}" y2="${H - 22}"/>
-      <text class="muted" x="${x(s)}" y="${H - 6}" text-anchor="middle">${s}</text>`
+  if (!root.querySelector('.plot')) {
+    root.innerHTML = `<h3>Range of each share</h3><figure><div class="plot"></div>
+      <figcaption id="ranges-cap">Bars span the stable range of each agent’s share. Ticks mark RO, MID and DO; the dark marker is the price point chosen in the market above. The table lists the same numbers.</figcaption></figure>`
   }
+  const plot = root.querySelector('.plot')
+  const W = Math.max(plot.clientWidth, 280)
+  const left = 40
+  const right = 20
+  const top = 28
+  const rowH = 40
+  const H = top + list.length * rowH + 28
+  const x = (s) => left + (s / max) * (W - left - right)
+  const step = max > 12 ? 5 : max > 5 ? 2 : 1
 
-  // label the three points on the first rider and first driver row only
-  const firstOfSide = (k) => k === 0 || k === p.RO.u.length
-  const bars = agents
-    .map((g, k) => {
-      const y = top + k * rowH + rowH / 2
-      const lo = Math.min(g.RO, g.DO)
-      const hi = Math.max(g.RO, g.DO)
-      let marks = ''
-      let lastX = -Infinity
-      for (const r of ['RO', 'MID', 'DO'].sort((s, t) => g[s] - g[t])) {
-        marks += `<line class="tick" x1="${x(g[r])}" x2="${x(g[r])}" y1="${y - 9}" y2="${y + 9}"/>`
-        if (firstOfSide(k) && x(g[r]) - lastX > 30) {
-          marks += `<text x="${x(g[r])}" y="${y - 13}" text-anchor="middle">${r}</text>`
-          lastX = x(g[r])
-        }
+  let out = ''
+  for (let s = 0; s <= max; s += step) {
+    out += `<line class="grid" x1="${x(s)}" x2="${x(s)}" y1="${top - 6}" y2="${H - 24}"/><text x="${x(s)}" y="${H - 6}" text-anchor="middle">${s}</text>`
+  }
+  list.forEach((g, k) => {
+    const y = top + k * rowH + rowH / 2
+    const lo = Math.min(g.RO, g.DO)
+    const hi = Math.max(g.RO, g.DO)
+    const c = SIDE[g.side]
+    out += `<text x="0" y="${y + 4}" font-weight="600" style="fill:${c.ink}">${g.name}</text>
+      <rect x="${x(lo)}" y="${y - 7}" width="${Math.max(x(hi) - x(lo), 2)}" height="14" rx="4" fill="${c.fill}"/>`
+    for (const r of ['RO', 'MID', 'DO']) {
+      out += `<line x1="${x(g[r])}" x2="${x(g[r])}" y1="${y - 7}" y2="${y + 7}" stroke="${c.ink}" stroke-width="1.5"/>`
+    }
+    // name the three points once per side, where the first row leaves room above
+    if (k === 0 || k === p.RO.u.length) {
+      let last = -Infinity
+      for (const r of ['RO', 'MID', 'DO'].sort((s, q) => g[s] - g[q])) {
+        if (x(g[r]) - last < 30) continue
+        out += `<text x="${x(g[r])}" y="${y - 12}" text-anchor="middle">${r}</text>`
+        last = x(g[r])
       }
-      return `<text x="0" y="${y + 4}">${g.name}</text>
-        <rect class="band" x="${x(lo)}" y="${y - 5}" width="${Math.max(x(hi) - x(lo), 1)}" height="10"/>${marks}`
-    })
-    .join('')
-
-  plot.innerHTML = `<svg viewBox="0 0 ${W} ${H}" width="${W}" height="${H}" role="img" aria-labelledby="ranges-cap">${grid}${bars}</svg>`
+    }
+    out += `<circle cx="${x(at[k])}" cy="${y}" r="6" fill="#111827" stroke="#fff" stroke-width="2"/>`
+  })
+  plot.innerHTML = `<svg viewBox="0 0 ${W} ${H}" width="${W}" height="${H}" role="img" aria-labelledby="ranges-cap">${out}</svg>`
 }

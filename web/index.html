@@ -5,63 +5,95 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Core Pricing in Learned Assignment Markets</title>
 <meta name="description" content="Optimal matching and core prices of a small ride-hailing market, and how they react to prediction error and misreporting.">
+<meta name="theme-color" content="#ffffff">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20'%3E%3Ccircle cx='4' cy='5' r='3' fill='%231d5bbf'/%3E%3Ccircle cx='16' cy='15' r='3' fill='%23a8520a'/%3E%3Cpath d='M4 5L16 15' stroke='%23111827' stroke-width='2'/%3E%3C/svg%3E">
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
-<main>
-  <header class="top">
-    <p class="kicker">DSC-13 Innovation Project, LPP and Game Theory</p>
-    <h1>Core Pricing in Learned Assignment Markets</h1>
-    <p class="question">When a ride-hailing platform matches riders to drivers using predicted (noisy) surplus values, how much do the optimal matching and the stable (core) prices change with prediction error, can riders or drivers gain by misreporting, and which stable price should the platform choose?</p>
-    <p class="note">A predicted surplus is modelled as the true surplus plus Gaussian error. Everything below is computed in your browser.</p>
-  </header>
+<a class="skip" href="#top">Skip to content</a>
+<header class="bar">
+  <div class="bar-in">
+    <a class="brand" href="#top">
+      <svg width="20" height="20" viewBox="0 0 20 20" aria-hidden="true"><path d="M4 5L16 15" stroke="#111827" stroke-width="2"/><circle cx="4" cy="5" r="3" fill="#1d5bbf"/><circle cx="16" cy="15" r="3" fill="#a8520a"/></svg>
+      <span>Core pricing</span>
+    </a>
+    <nav aria-label="Sections">
+      <a href="#market">Market</a>
+      <a href="#prices">Core prices</a>
+      <a href="#noise">Prediction error</a>
+      <a href="#manip">Misreporting</a>
+      <a href="#game">Pricing game</a>
+    </nav>
+  </div>
+</header>
 
-  <section id="matrix" aria-labelledby="h-matrix">
-    <h2 id="h-matrix"><span class="n">1</span>Surplus matrix and optimal matching</h2>
-    <p class="lead">Entry a<sub>ij</sub> is rider i's value minus driver j's cost. The assignment LP picks the matching with the largest total. Matched pairs are shaded.</p>
-    <div class="controls" role="group" aria-label="Presets and size">
-      <button type="button" data-preset="A">Instance A (2&times;2)</button>
-      <button type="button" data-preset="B">Instance B (3&times;3)</button>
-      <button type="button" data-size="row+">Add rider</button>
-      <button type="button" data-size="row-">Remove rider</button>
-      <button type="button" data-size="col+">Add driver</button>
-      <button type="button" data-size="col-">Remove driver</button>
+<main id="top">
+  <div class="intro">
+    <h1>Core Pricing in Learned Assignment Markets</h1>
+    <p>When a ride-hailing platform matches riders to drivers using predicted (noisy) surplus values, how much do the optimal matching and the stable (core) prices change with prediction error, can riders or drivers gain by misreporting, and which stable price should the platform choose?</p>
+    <p class="meta">A predicted surplus is modelled as the true surplus plus Gaussian error. Every number on this page is computed in your browser. Anirudh Jain, Ayush Pandey, Sourabh.</p>
+  </div>
+
+  <section id="market" aria-labelledby="h-market">
+    <div class="head">
+      <h2 id="h-market">The market and its matching</h2>
+      <p>Each entry is a rider’s value for the trip minus the driver’s cost. The assignment LP picks the matching with the largest total, and the dual LP sets how each matched pair splits its surplus.</p>
     </div>
-    <div id="matrix-view"></div>
+    <div class="grid">
+      <div class="card span-5" id="matrix-view"></div>
+      <div class="card span-7 market" id="market-view"></div>
+    </div>
   </section>
 
-  <section id="ranges" aria-labelledby="h-ranges">
-    <h2 id="h-ranges"><span class="n">2</span>Core prices</h2>
-    <p class="lead">Each bar is the range of one agent's share over all core (stable) price vectors, the optimal solutions of the dual LP. RO is the rider-optimal point, DO the driver-optimal point and MID their average.</p>
-    <div id="ranges-view"></div>
+  <section id="prices" aria-labelledby="h-prices">
+    <div class="head">
+      <h2 id="h-prices">Core prices</h2>
+      <p>Any split inside these ranges is stable: no rider and driver can leave together and both do better. Rider-optimal (RO) and driver-optimal (DO) are the two ends, and the midpoint (MID) is their average. The marker shows the price point chosen above.</p>
+    </div>
+    <div class="grid">
+      <div class="card span-8" id="ranges-view"></div>
+      <div class="card span-4" id="ranges-table"></div>
+    </div>
   </section>
 
   <section id="noise" aria-labelledby="h-noise">
-    <h2 id="h-noise"><span class="n">3</span>Prediction error</h2>
-    <p class="lead">Each draw adds N(0, &sigma;<sup>2</sup>) error to every entry, re-solves on the estimate and compares with the truth (seed 1).</p>
-    <div class="controls">
-      <label for="sigma">&sigma; <output id="sigma-out" for="sigma">1.00</output></label>
-      <input id="sigma" type="range" min="0" max="3" step="0.05" value="1">
-      <label for="draws">Draws</label>
-      <select id="draws"><option>500</option><option selected>2000</option><option>4000</option></select>
+    <div class="head">
+      <h2 id="h-noise">Prediction error</h2>
+      <p>Each draw adds N(0, &sigma;<sup>2</sup>) error to every entry, solves the estimated market, and compares it with the true one. The random seed is fixed, so the same settings give the same numbers.</p>
     </div>
-    <div id="noise-view" aria-live="polite"></div>
+    <div class="card">
+      <div class="row">
+        <label class="field" for="sigma">Error &sigma; <output id="sigma-out" for="sigma">1.00</output></label>
+        <input id="sigma" type="range" min="0" max="3" step="0.05" value="1">
+        <span class="field" id="draws-label">Draws</span>
+        <div class="seg" role="group" aria-labelledby="draws-label" id="draws">
+          <button type="button" data-draws="500" aria-pressed="false">500</button>
+          <button type="button" data-draws="2000" aria-pressed="true">2000</button>
+          <button type="button" data-draws="4000" aria-pressed="false">4000</button>
+        </div>
+      </div>
+      <div id="noise-view" aria-live="polite"></div>
+    </div>
   </section>
 
   <section id="manip" aria-labelledby="h-manip">
-    <h2 id="h-manip"><span class="n">4</span>Misreporting</h2>
-    <p class="lead">One rider shifts their own row, or one driver their own column, by &minus;2, &minus;1, 1 or 2. Gain is the true payoff under the false report minus the truthful payoff. Select a cell for details.</p>
-    <div id="manip-view"></div>
+    <div class="head">
+      <h2 id="h-manip">Misreporting</h2>
+      <p>One rider shifts their own row, or one driver their own column, by &minus;2, &minus;1, +1 or +2. The gain is what they really earn under the false report minus what they earn by telling the truth. Select a cell to see who gains.</p>
+    </div>
+    <div class="grid" id="manip-view"></div>
   </section>
 
   <section id="game" aria-labelledby="h-game">
-    <h2 id="h-game"><span class="n">5</span>Which price should the platform choose?</h2>
-    <p class="lead">A zero-sum game: the platform picks RO, MID or DO, a manipulator picks the riders' or the drivers' side, and the payoff is the best gain from section 4. The platform minimises.</p>
-    <div id="game-view"></div>
+    <div class="head">
+      <h2 id="h-game">Which price should the platform choose?</h2>
+      <p>A zero-sum game. The platform picks RO, MID or DO, a manipulator picks which side to act on, and the payoff is the best gain from the table above. The platform wants it small.</p>
+    </div>
+    <div class="grid" id="game-view"></div>
   </section>
-
-  <footer>Anirudh Jain, Ayush Pandey, Sourabh. MIT licence.</footer>
 </main>
+
+<footer>Anirudh Jain, Ayush Pandey, Sourabh. DSC-13 mini-project. MIT licence.</footer>
 <script type="module" src="app.js"></script>
 </body>
 </html>

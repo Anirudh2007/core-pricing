@@ -1,5 +1,6 @@
 import { renderMatrix } from './ui/matrix.js'
-import { renderRanges } from './ui/ranges.js'
+import { renderMarket } from './ui/market.js'
+import { renderRanges, renderRangeTable } from './ui/ranges.js'
 import { renderNoise } from './ui/noise.js'
 import { renderManipulation } from './ui/manipulation.js'
 import { renderGame } from './ui/game.js'
@@ -8,57 +9,64 @@ const PRESETS = {
   A: [[10, 6], [7, 4]],
   B: [[12, 10, 6], [11, 7, 4], [9, 11, 9]],
 }
-let a = PRESETS.B
+const state = { a: PRESETS.B, preset: 'B', t: 0.5, draws: 2000 }
 
 const $ = (s) => document.querySelector(s)
 const sigma = $('#sigma')
-const draws = $('#draws')
 const showSigma = () => ($('#sigma-out').value = Number(sigma.value).toFixed(2))
 
 function noise() {
   showSigma()
-  renderNoise($('#noise-view'), a, Number(sigma.value), Number(draws.value))
+  for (const b of document.querySelectorAll('[data-draws]')) b.setAttribute('aria-pressed', String(+b.dataset.draws === state.draws))
+  renderNoise($('#noise-view'), state.a, Number(sigma.value), state.draws)
 }
 
-function render() {
-  renderMatrix($('#matrix-view'), a, (next) => {
-    a = next
+const on = {
+  preset(name) {
+    Object.assign(state, { a: PRESETS[name], preset: name })
     render()
-  })
-  renderRanges($('#ranges-view'), a)
-  renderGame($('#game-view'), renderManipulation($('#manip-view'), a))
-  for (const b of document.querySelectorAll('[data-size]')) {
-    const op = b.dataset.size
-    const size = op.startsWith('row') ? a.length : a[0].length
-    b.disabled = op.endsWith('+') ? size >= 4 : size <= 1
-  }
-  noise()
-}
-
-for (const b of document.querySelectorAll('[data-preset]')) {
-  b.addEventListener('click', () => {
-    a = PRESETS[b.dataset.preset]
+  },
+  edit(a) {
+    Object.assign(state, { a, preset: null })
     render()
-  })
-}
-
-for (const b of document.querySelectorAll('[data-size]')) {
-  b.addEventListener('click', () => {
-    const op = b.dataset.size
+  },
+  resize(op) {
+    let { a } = state
     if (op === 'row+') a = [...a, a[0].map(() => 0)]
     if (op === 'row-') a = a.slice(0, -1)
     if (op === 'col+') a = a.map((row) => [...row, 0])
     if (op === 'col-') a = a.map((row) => row.slice(0, -1))
+    Object.assign(state, { a, preset: null })
     render()
+  },
+}
+
+function render() {
+  renderMatrix($('#matrix-view'), state.a, state.preset, on)
+  renderMarket($('#market-view'), state.a, state.t, (t) => {
+    state.t = t
+    renderRanges($('#ranges-view'), state.a, t)
   })
+  renderRanges($('#ranges-view'), state.a, state.t)
+  renderRangeTable($('#ranges-table'), state.a)
+  renderGame($('#game-view'), renderManipulation($('#manip-view'), state.a))
+  noise()
 }
 
 sigma.addEventListener('input', showSigma)
 sigma.addEventListener('change', noise)
-draws.addEventListener('change', noise)
+for (const b of document.querySelectorAll('[data-draws]')) {
+  b.addEventListener('click', () => {
+    state.draws = +b.dataset.draws
+    noise()
+  })
+}
 
 let timer
-window.addEventListener('resize', () => {
+let width = innerWidth
+addEventListener('resize', () => {
+  if (innerWidth === width) return
+  width = innerWidth
   clearTimeout(timer)
   timer = setTimeout(render, 150)
 })
