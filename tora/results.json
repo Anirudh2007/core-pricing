@@ -1,14 +1,14 @@
 {
   "A": {
-    "primal": { "z": null, "iterations": null, "u": null, "v": null },
-    "RO": { "z": null },
-    "DO": { "z": null },
+    "primal": { "z": 14, "iterations": 4, "u": [7, 4], "v": [3, 0] },
+    "RO": { "z": 11 },
+    "DO": { "z": 2 },
     "transport": { "northwest": null, "leastCost": null, "vogel": null, "optimal": null }
   },
   "B": {
-    "primal": { "z": null, "iterations": null, "u": null, "v": null },
-    "RO": { "z": null },
-    "DO": { "z": null },
+    "primal": { "z": 30, "iterations": 7, "u": null, "v": null },
+    "RO": { "z": 24 },
+    "DO": { "z": 3 },
     "transport": { "northwest": null, "leastCost": null, "vogel": null, "optimal": null }
   },
   "game": { "w": null, "p": null }

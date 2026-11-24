@@ -146,7 +146,7 @@ and the bold zeros give R1--D2, R2--D1, R3--D3 with cost $36-30=6$, the same mat
 
 \section{Relationship to TORA: Hand Solutions and Code}
 
-Every small LP is solved by hand in TORA~\cite{taha}: the primal assignment LP for $A$ (4 variables, 4 constraints) and $B$ (9 variables, 6 constraints), where we read the iterations, the final tableau with its zero-valued basic variable, the dual values and the sensitivity table; the RO and DO LPs (maximise or minimise $\sum u_i$ subject to $u_i+v_j\ge a_{ij}$ and $\sum u+\sum v=V$), which need artificial variables; the same assignment as a balanced transportation problem with supplies and demands 1 and cost $K-a$, from all three starting solutions; and the platform game as an LP (Section~3.3). The code does what TORA cannot repeat by hand: thousands of noisy re-solves, every misreport, and the theorem check. On the small instances the code and TORA must agree; Table~\ref{tab:tora} lists the values to compare.
+Every small LP is solved by hand in TORA~\cite{taha}: the primal assignment LP for $A$ (4 variables, 4 constraints) and $B$ (9 variables, 6 constraints), where we read the iterations, the final tableau with its zero-valued basic variable, the dual values and the sensitivity table; the RO and DO LPs (maximise or minimise $\sum u_i$ subject to $u_i+v_j\ge a_{ij}$ and $\sum u+\sum v=V$), which need artificial variables; the same assignment as a balanced transportation problem with supplies and demands 1 and cost $K-a$, from all three starting solutions; and the platform game as an LP (Section~3.3). The code does what TORA cannot repeat by hand: thousands of noisy re-solves, every misreport, and the theorem check. On the small instances the code and TORA must agree, and they do on every LP solved so far (Table~\ref{tab:tora}, Figure~\ref{fig:tora}). TORA's RO and DO LPs return exactly the corner points of Table~\ref{tab:core}, for instance $u=(8,7,9)$, $v=(4,2,0)$ for RO on $B$. For the primal of $A$, TORA's dual prices are $(7,4)$ for the riders and $(3,0)$ for the drivers: the rider-optimal point. Its sensitivity table shows the degeneracy directly. The rider constraints have maximum RHS 1 (allowable increase 0) and the driver constraints minimum RHS 1 (allowable decrease 0), so each printed price is the one-sided slope from the sensitivity paragraph of Section 1.
 
 \textbf{Interactive page.} The same code runs in a web page (Figure~\ref{fig:page}), so the results can be checked live. The input is the surplus matrix: up to four riders and four drivers, any non-negative numbers, with $A$ and $B$ as presets. The page then shows the optimal matching as a graph with each pair's split, and a price-point slider walks the core from RO through MID to DO (any mix of RO and DO is again in the core). Below it are the core ranges, the noise study (with $\sigma$ from 0 to 3 and 500, 2000 or 4000 draws), the misreport table and the pricing game, all recomputed whenever the matrix changes.
 
@@ -163,43 +163,41 @@ Every small LP is solved by hand in TORA~\cite{taha}: the primal assignment LP f
 \toprule
 Quantity & Computed & TORA & Quantity & Computed & TORA \\
 \midrule
-$A$ primal $z$     & 14 & to be filled & $B$ primal $z$     & 30 & to be filled \\
-$A$ RO LP $z$      & 11 & to be filled & $B$ RO LP $z$      & 24 & to be filled \\
-$A$ DO LP $z$      & 2  & to be filled & $B$ DO LP $z$      & 3  & to be filled \\
+$A$ primal $z$     & 14 & 14 & $B$ primal $z$     & 30 & 30 \\
+$A$ RO LP $z$      & 11 & 11 & $B$ RO LP $z$      & 24 & 24 \\
+$A$ DO LP $z$      & 2  & 2  & $B$ DO LP $z$      & 3  & 3 \\
+$A$ duals in core? & yes & yes, $(7,4\,|\,3,0)$ & $B$ duals in core? & yes & to be filled \\
 $A$ transport cost & 6  & to be filled & $B$ transport cost & 6  & to be filled \\
-$A$ duals in core? & yes & to be filled & $B$ duals in core? & yes & to be filled \\
 Game LP $w$        & 2  & to be filled & Game value $w-1$   & 1  & to be filled \\
 \bottomrule
 \end{tabular}
-\caption{Computed values and the matching TORA outputs. ``Duals in core'' means the dual values TORA prints satisfy $u_i+v_j\ge a_{ij}$ and sum to $V$.}
+\caption{Computed values and TORA's outputs. ``Duals in core'' means the dual prices TORA prints satisfy $u_i+v_j\ge a_{ij}$ and sum to $V$. TORA needed 4 and 7 simplex iterations for the primal LPs of $A$ and $B$, and 9, 11, 15 and 16 iterations (M-method) for the RO and DO LPs of $A$ and $B$.}
 \label{tab:tora}
 \end{table}
 
-\begin{figure}[h]
+\begin{figure}[!t]
 \centering
-\begin{minipage}{0.48\textwidth}\centering
-\torashot{primal LP of $B$, final tableau}
+\begin{minipage}[t]{0.32\textwidth}\centering
+\includegraphics[width=\linewidth]{figures/tora-A-primal.png}\\{\scriptsize (a) primal LP of $A$, with sensitivity}
 \end{minipage}\hfill
-\begin{minipage}{0.48\textwidth}\centering
-\torashot{primal LP of $B$, sensitivity analysis}
+\begin{minipage}[t]{0.32\textwidth}\centering
+\includegraphics[width=\linewidth]{figures/tora-B-primal.png}\\{\scriptsize (b) primal LP of $B$}
+\end{minipage}\hfill
+\begin{minipage}[t]{0.32\textwidth}\centering
+\includegraphics[width=\linewidth]{figures/tora-B-RO.png}\\{\scriptsize (c) RO LP of $B$, M-method}
 \end{minipage}
 
-\vspace{0.6em}
-\begin{minipage}{0.48\textwidth}\centering
-\torashot{RO LP of $B$, M-method final iteration}
+\vspace{0.5em}
+\begin{minipage}[t]{0.32\textwidth}\centering
+\includegraphics[width=\linewidth]{figures/tora-B-DO.png}\\{\scriptsize (d) DO LP of $B$, M-method}
 \end{minipage}\hfill
-\begin{minipage}{0.48\textwidth}\centering
-\torashot{DO LP of $B$, M-method final iteration}
-\end{minipage}
-
-\vspace{0.6em}
-\begin{minipage}{0.48\textwidth}\centering
-\torashot{transportation model of $B$, Vogel start and optimum}
+\begin{minipage}[t]{0.32\textwidth}\centering
+\fbox{\parbox[c][3.0cm][c]{0.9\linewidth}{\centering\scriptsize TORA screenshot:\\ transportation model of $B$}}\\{\scriptsize (e) to be added}
 \end{minipage}\hfill
-\begin{minipage}{0.48\textwidth}\centering
-\torashot{platform game LP, final solution}
+\begin{minipage}[t]{0.32\textwidth}\centering
+\fbox{\parbox[c][3.0cm][c]{0.9\linewidth}{\centering\scriptsize TORA screenshot:\\ platform game LP}}\\{\scriptsize (f) to be added}
 \end{minipage}
-\caption{TORA output for instance $B$ and the platform game.}
+\caption{TORA output. In (a) the dual prices are the rider-optimal point $(7,4\,|\,3,0)$ and the RHS ranges show the zero allowable ranges caused by degeneracy.}
 \label{fig:tora}
 \end{figure}
 
