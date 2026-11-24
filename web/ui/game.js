@@ -1,19 +1,22 @@
+import { RULES } from '../lib/core.js'
 import { solveGame, worstCase, lines } from '../lib/game.js'
 import { fmt } from './matrix.js'
 import { lineChart } from './noise.js'
 
-const RULES = ['RO', 'MID', 'DO']
 const pct = (x) => `${Math.round(x * 100)}%`
 
 export function renderGame(root, table) {
   const M = RULES.map((r) => [table[r].rider, table[r].driver])
   const g = solveGame(M, 'min')
   const { y, rows, envelope } = lines(M)
-  const pure = RULES.filter((_, k) => Math.abs(worstCase(M, RULES.map((__, q) => +(q === k)), 'min') - g.value) < 1e-9)
-  const mixed = g.rowMix.filter((x) => x > 1e-9).length > 1
-  const mix = RULES.map((r, k) => [r, g.rowMix[k]]).filter(([, x]) => x > 1e-9).map(([r, x]) => `${pct(x)} ${r}`).join(', ')
-  const lo = Math.max(...RULES.map((_, k) => Math.min(...M[k])))
-  const hi = Math.min(...RULES.map((_, k) => Math.max(...M[k])))
+  const only = (k) => RULES.map((_, q) => +(q === k))
+  const pure = RULES.filter((_, k) => Math.abs(worstCase(M, only(k), 'min') - g.value) < 1e-9)
+  const used = RULES.map((r, k) => [r, g.rowMix[k]]).filter(([, x]) => x > 1e-9)
+  const mixed = used.length > 1
+  const mix = used.map(([r, x]) => `${pct(x)} ${r}`).join(', ')
+  // the manipulator picks a column, so its guaranteed gain is a column minimum
+  const lo = Math.max(...M[0].map((_, j) => Math.min(...M.map((row) => row[j]))))
+  const hi = Math.min(...M.map((row) => Math.max(...row)))
   const body = M.map((row, k) => `<tr><th scope="row">${RULES[k]}</th><td>${fmt(row[0])}</td><td>${fmt(row[1])}</td><td>${fmt(Math.max(...row))}</td></tr>`).join('')
 
   let answer = `Any platform strategy whose worst case equals the value is optimal.`
