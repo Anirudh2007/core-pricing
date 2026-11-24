@@ -5,11 +5,12 @@
   "type": "module",
   "license": "MIT",
   "author": "Anirudh Jain, Ayush Pandey, Sourabh",
+  "homepage": "https://anirudh2007.github.io/core-pricing/",
+  "repository": { "type": "git", "url": "https://github.com/Anirudh2007/core-pricing.git" },
   "engines": { "node": ">=20" },
   "scripts": {
     "test": "node --test",
     "check": "node scripts/check-targets.mjs",
-    "tora-check": "node tora/check.mjs",
     "start": "node scripts/serve.mjs"
   }
 }

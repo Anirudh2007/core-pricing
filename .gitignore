@@ -16,16 +16,9 @@ desktop.ini
 .idea/
 *.swp
 
-# latex build output (the pdf is built from report/main.tex)
-report/*.aux
-report/*.bbl
-report/*.blg
-report/*.fdb_latexmk
-report/*.fls
-report/*.out
-report/*.synctex.gz
-report/*.toc
-report/*.pdf
+# kept locally, not part of the published project
+report/
+tora/
 
 # browser test output
 .playwright-mcp/

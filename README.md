@@ -1,55 +1,63 @@
 # Core Pricing in Learned Assignment Markets
 
-Mini-project for DSC-13 (LPP and Game Theory). Live page: https://anirudh2007.github.io/core-pricing/
+DSC-13 mini-project (Linear Programming and Game Theory).
+
+**Live page:** https://anirudh2007.github.io/core-pricing/
 
 > When a ride-hailing platform matches riders to drivers using predicted (noisy) surplus values, how much do the optimal matching and the stable (core) prices change with prediction error, can riders or drivers gain by misreporting, and which stable price should the platform choose?
 
-A table of predicted surplus (rider value minus driver cost) goes in. We find the optimal matching as an assignment LP and the core, the range of prices no rider-driver pair wants to leave, as the optimal solutions of the dual LP. Then we test the answer three ways: random error in the surplus values, one agent misreporting, and a small zero-sum game between the platform and a manipulator to pick the price.
+## What it does
 
-A prediction is modelled as the true surplus plus random normal error with spread σ. Any prediction method can be written as truth plus error, so changing σ covers good and bad predictors.
+The input is a surplus table: one row per rider, one column per driver, each entry being what the rider would pay minus what the trip costs the driver.
 
-Result on the 3×3 test market: the matching tolerates prediction error, the prices do not, and the midpoint price (MID) is the safest choice.
+- The assignment LP picks who rides with whom to make the total surplus as large as possible.
+- Its dual LP gives each rider's and each driver's share of the surplus. The optimal dual solutions are the *core*: prices where no rider and driver could do better by leaving together. The core is a range, so we compare three points in it: rider-optimal (RO), driver-optimal (DO) and their midpoint (MID).
+- To model prediction error, each surplus becomes the true value plus random normal error of spread σ, and the market is solved thousands of times to see how the matching and prices move.
+- To test misreporting, one rider or driver reports their values 1 or 2 higher or lower, and we measure whether it pays.
+- To choose a price, the platform plays RO, MID or DO against a manipulator who picks a side, a zero-sum game solved by the graphical method and as an LP.
 
-## Run
+On the page you can edit the table (up to 4 × 4) or load the two example markets, drag a slider through the core from RO to DO, set σ and the number of repeats, and click any misreport to see who gains.
 
-Needs Node 20 or newer. There are no dependencies to install.
+## Results on the 3 × 3 example
+
+- The matching tolerates small errors: at σ = 1 it changes in 30% of runs but loses only 2% of the surplus.
+- Prices move seven to nine times more than the surplus lost, and MID moves least.
+- RO protects riders from manipulation and DO protects drivers, but each leaves the other side able to gain 2. MID caps both sides at 1.
+- The pricing game has value 1 with no saddle point, and MID is an optimal choice for the platform.
+
+## Run it
+
+Needs Node 20 or newer. There is nothing to install.
 
 ```
 npm start
 ```
 
-Then open http://localhost:8080. The page is plain HTML and ES modules in `web/`, and everything is computed in the browser.
+Then open http://localhost:8080.
 
-## Test
+## Tests and checks
 
 ```
-npm test            # unit tests for every module in web/lib
-npm run check       # re-runs every experiment and prints the tables used in the report
+npm test            # 37 unit tests for the solvers in web/lib
+npm run check       # re-runs every experiment and compares it with the expected numbers
 ```
 
-`npm run check` exits with an error if any number differs from the expected targets.
+The same tests run on GitHub for every push, and the page is redeployed from `web/`.
 
 ## TORA
 
-The LP side of the project was done by hand in TORA: the primal and dual assignment LPs, the rider-optimal and driver-optimal LPs, the transportation form with three starting solutions, and the game as an LP. `tora/entry-sheets.md` lists exactly what to type. Values read from TORA go in `tora/results.json`, and
-
-```
-npm run tora-check
-```
-
-compares each one with the computed value. Screenshots are in `tora/screens/`.
+Every model small enough to enter by hand (the assignment LP, the rider-optimal and driver-optimal LPs, the transportation form and the game LP) was also solved in TORA, and every value matches the code. The TORA runs are shown in the project report.
 
 ## Layout
 
-- `web/lib` matching, core prices, Hungarian steps, noise, misreporting and the game (no DOM)
-- `web/ui` the page's tables and SVG charts
-- `scripts` the target check and a small static server
-- `report` the LaTeX report
-
-## Publishing
-
-The `pages` workflow publishes `web/` to GitHub Pages on every push to `main` (Pages source: "GitHub Actions" in the repository settings).
+```
+web/            the page: index.html, style.css, app.js
+web/lib/        solvers: assignment, core prices, Hungarian method, noise, misreporting, game
+web/ui/         tables and charts on the page
+test/           unit tests (node:test)
+scripts/        experiment check and a small local server
+```
 
 ## Authors
 
-Anirudh Jain, Ayush Pandey, Sourabh. MIT licence.
+Anirudh Jain, Ayush Pandey and Sourabh. Released under the MIT licence.
