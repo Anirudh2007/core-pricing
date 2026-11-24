@@ -1,18 +1,33 @@
+# dependencies and logs
 node_modules/
-.DS_Store
-Thumbs.db
+npm-debug.log*
 *.log
 
-# latex build output
+# local settings and secrets
+.env
+.env.*
+*.local
+
+# os and editor files
+.DS_Store
+Thumbs.db
+desktop.ini
+.vscode/
+.idea/
+*.swp
+
+# latex build output (the pdf is built from report/main.tex)
 report/*.aux
-report/*.log
-report/*.out
-report/*.fls
+report/*.bbl
+report/*.blg
 report/*.fdb_latexmk
+report/*.fls
+report/*.out
 report/*.synctex.gz
 report/*.toc
 report/*.pdf
 
-# editor folders
-.vscode/
-.idea/
+# browser test output
+.playwright-mcp/
+test-results/
+coverage/
