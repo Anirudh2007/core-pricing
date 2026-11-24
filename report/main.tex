@@ -6,6 +6,20 @@
 \usepackage{booktabs}
 \usepackage{pgfplots}
 \pgfplotsset{compat=1.18}
+\definecolor{rider}{HTML}{1D5BBF}
+\definecolor{driver}{HTML}{A8520A}
+\definecolor{ridersoft}{HTML}{DCE7F8}
+\definecolor{driversoft}{HTML}{F6E5D3}
+\definecolor{ink}{HTML}{111827}
+\definecolor{quiet}{HTML}{A3AAB8}
+
+% one matched pair as a bar split into the rider's share and the driver's share
+\newcommand{\splitbar}[4]{%
+  \fill[rider] (0,#1) rectangle (#2*0.36,#1+0.42);
+  \fill[driver] (#2*0.36,#1) rectangle (#2*0.36+#3*0.36,#1+0.42);
+  \ifdim #2pt>0pt \node[white,font=\scriptsize\bfseries,anchor=west] at (0.02,#1+0.21) {#2};\fi
+  \ifdim #3pt>0pt \node[white,font=\scriptsize\bfseries,anchor=east] at (#2*0.36+#3*0.36-0.02,#1+0.21) {#3};\fi
+  \node[font=\scriptsize,anchor=east] at (-0.1,#1+0.21) {#4};}
 \setlist[itemize]{itemsep=2pt,topsep=3pt}
 \setlength{\abovecaptionskip}{4pt}
 
@@ -51,7 +65,7 @@ We read $u_i$ and $v_j$ as the shares of the surplus that rider $i$ and driver $
 \[
 B=\begin{pmatrix}12&10&6\\11&7&4\\9&11&9\end{pmatrix},\qquad V=30,\quad \text{matching } R1\text{--}D2,\; R2\text{--}D1,\; R3\text{--}D3 .
 \]
-The other five matchings are worth 28, 28, 27, 23 and 22. Table~\ref{tab:core} and Figure~\ref{fig:ranges} give the three core points. Every range has width 7, and the riders' total runs from 3 at DO to 24 at RO, so the choice inside the core moves 21 of the 30 units between the two sides without changing the matching. The smaller instance $A=\begin{pmatrix}10&6\\7&4\end{pmatrix}$ gives $V=14$, RO $u=(7,4)$, $v=(3,0)$ and DO $u=(2,0)$, $v=(8,4)$.
+The other five matchings are worth 28, 28, 27, 23 and 22. Table~\ref{tab:core} and Figures~\ref{fig:split} and~\ref{fig:ranges} give the three core points. Every range has width 7, and the riders' total runs from 3 at DO to 24 at RO, so the choice inside the core moves 21 of the 30 units between the two sides without changing the matching. The smaller instance $A=\begin{pmatrix}10&6\\7&4\end{pmatrix}$ gives $V=14$, RO $u=(7,4)$, $v=(3,0)$ and DO $u=(2,0)$, $v=(8,4)$.
 
 \begin{table}[h]
 \centering\small
@@ -68,20 +82,36 @@ DO  & 1   & 0   & 2   & 11  & 9   & 7   & 3 \\
 \label{tab:core}
 \end{table}
 
+\begin{figure}[htbp]
+\centering
+\begin{tikzpicture}
+\foreach \name/\x/\a/\b/\c/\d/\e/\f in {RO/0/8/2/7/4/9/0, MID/5.3/4.5/5.5/3.5/7.5/5.5/3.5, DO/10.6/1/9/0/11/2/7} {
+  \begin{scope}[xshift=\x cm]
+    \node[font=\small\bfseries,anchor=west] at (0,2.05) {\name};
+    \splitbar{1.2}{\a}{\b}{R1--D2}
+    \splitbar{0.6}{\c}{\d}{R2--D1}
+    \splitbar{0}{\e}{\f}{R3--D3}
+  \end{scope}
+}
+\end{tikzpicture}
+\caption{How each matched pair of $B$ splits its surplus at the three core points: rider's share in blue, driver's share in amber. The matching is the same; only the split moves.}
+\label{fig:split}
+\end{figure}
+
 \begin{figure}[h]
 \centering
 \begin{tikzpicture}
 \begin{axis}[
   width=0.82\textwidth, height=4.6cm,
   xmin=-0.5, xmax=12, ymin=0.4, ymax=7,
-  ytick={1,...,6}, yticklabels={D3,D2,D1,R3,R2,R1},
+  ytick={1,...,6}, yticklabels={\textcolor{driver}{D3},\textcolor{driver}{D2},\textcolor{driver}{D1},\textcolor{rider}{R3},\textcolor{rider}{R2},\textcolor{rider}{R1}},
   xlabel={share of the surplus}, xtick={0,2,...,12},
   xmajorgrids, grid style={gray!25}, tick label style={font=\small}, label style={font=\small}]
-\foreach \y/\lo/\mid/\hi in {6/1/4.5/8, 5/0/3.5/7, 4/2/5.5/9, 3/4/7.5/11, 2/2/5.5/9, 1/0/3.5/7} {
-  \edef\temp{\noexpand\draw[line width=4pt, gray!35] (axis cs:\lo,\y) -- (axis cs:\hi,\y);
-    \noexpand\draw[thick] (axis cs:\lo,\y-0.25) -- (axis cs:\lo,\y+0.25);
-    \noexpand\draw[thick] (axis cs:\hi,\y-0.25) -- (axis cs:\hi,\y+0.25);
-    \noexpand\fill (axis cs:\mid,\y) circle (2pt);}
+\foreach \y/\lo/\mid/\hi/\c in {6/1/4.5/8/rider, 5/0/3.5/7/rider, 4/2/5.5/9/rider, 3/4/7.5/11/driver, 2/2/5.5/9/driver, 1/0/3.5/7/driver} {
+  \edef\temp{\noexpand\draw[line width=5pt, \c soft] (axis cs:\lo,\y) -- (axis cs:\hi,\y);
+    \noexpand\draw[thick, \c] (axis cs:\lo,\y-0.25) -- (axis cs:\lo,\y+0.25);
+    \noexpand\draw[thick, \c] (axis cs:\hi,\y-0.25) -- (axis cs:\hi,\y+0.25);
+    \noexpand\draw[thick, \c] (axis cs:\mid,\y-0.25) -- (axis cs:\mid,\y+0.25);}
   \temp
 }
 \node[font=\scriptsize, above] at (axis cs:8,6.2) {RO};
@@ -91,7 +121,7 @@ DO  & 1   & 0   & 2   & 11  & 9   & 7   & 3 \\
 \node[font=\scriptsize, above] at (axis cs:11,3.2) {DO};
 \end{axis}
 \end{tikzpicture}
-\caption{Core range of each agent's share in instance $B$. Riders' ranges run from DO (left) to RO (right), drivers' ranges the other way; the dot is MID.}
+\caption{Core range of each agent's share in instance $B$, riders in blue and drivers in amber. Riders' ranges run from DO (left) to RO (right), drivers' ranges the other way; the middle tick is MID.}
 \label{fig:ranges}
 \end{figure}
 
@@ -117,6 +147,15 @@ and the bold zeros give R1--D2, R2--D1, R3--D3 with cost $36-30=6$, the same mat
 \section{Relationship to TORA: Hand Solutions and Code}
 
 Every small LP is solved by hand in TORA~\cite{taha}: the primal assignment LP for $A$ (4 variables, 4 constraints) and $B$ (9 variables, 6 constraints), where we read the iterations, the final tableau with its zero-valued basic variable, the dual values and the sensitivity table; the RO and DO LPs (maximise or minimise $\sum u_i$ subject to $u_i+v_j\ge a_{ij}$ and $\sum u+\sum v=V$), which need artificial variables; the same assignment as a balanced transportation problem with supplies and demands 1 and cost $K-a$, from all three starting solutions; and the platform game as an LP (Section~3.3). The code does what TORA cannot repeat by hand: thousands of noisy re-solves, every misreport, and the theorem check. On the small instances the code and TORA must agree; Table~\ref{tab:tora} lists the values to compare.
+
+\textbf{Interactive page.} The same code runs in a web page (Figure~\ref{fig:page}), so the results can be checked live. The input is the surplus matrix: up to four riders and four drivers, any non-negative numbers, with $A$ and $B$ as presets. The page then shows the optimal matching as a graph with each pair's split, and a price-point slider walks the core from RO through MID to DO (any mix of RO and DO is again in the core). Below it are the core ranges, the noise study (with $\sigma$ from 0 to 3 and 500, 2000 or 4000 draws), the misreport table and the pricing game, all recomputed whenever the matrix changes.
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=\textwidth]{figures/page-market.png}
+\caption{The interactive page on instance $B$ at the midpoint: the editable surplus matrix with the optimal matching outlined (left), and the matching graph, the split of each matched pair and the price-point slider (right).}
+\label{fig:page}
+\end{figure}
 
 \begin{table}[h]
 \centering\small
@@ -198,9 +237,9 @@ $\sigma$ & P(matching changes) & Mean surplus lost & \multicolumn{3}{c}{Mean pri
   xlabel={$\sigma$}, grid=major, grid style={gray!25},
   tick label style={font=\small}, label style={font=\small},
   title={\small (a) matching}]
-\addplot[thick, black, mark=*, mark size=1.2pt] coordinates {(0,0) (0.25,0) (0.5,0.047) (0.75,0.181) (1,0.297) (1.5,0.457) (2,0.537) (2.5,0.595) (3,0.629)};
-\node[font=\scriptsize, anchor=south east] at (axis cs:3,0.66) {P(change)};
-\addplot[thick, dashed, black] coordinates {(0,0) (0.25,0) (0.5,0.100) (0.75,0.394) (1,0.651) (1.5,1.034) (2,1.278) (2.5,1.509) (3,1.687)};
+\addplot[very thick, rider, mark=*, mark size=1.2pt] coordinates {(0,0) (0.25,0) (0.5,0.047) (0.75,0.181) (1,0.297) (1.5,0.457) (2,0.537) (2.5,0.595) (3,0.629)};
+\node[font=\scriptsize, anchor=south east, text=rider] at (axis cs:3,0.66) {P(change)};
+\addplot[thick, quiet] coordinates {(0,0) (0.25,0) (0.5,0.100) (0.75,0.394) (1,0.651) (1.5,1.034) (2,1.278) (2.5,1.509) (3,1.687)};
 \node[font=\scriptsize, anchor=south east] at (axis cs:1.45,1.1) {surplus lost};
 \end{axis}
 \begin{axis}[
@@ -210,12 +249,12 @@ $\sigma$ & P(matching changes) & Mean surplus lost & \multicolumn{3}{c}{Mean pri
   xlabel={$\sigma$}, grid=major, grid style={gray!25},
   tick label style={font=\small}, label style={font=\small},
   title={\small (b) mean price shift}]
-\addplot[thin, black] coordinates {(0,0) (0.25,1.658) (0.5,3.261) (0.75,4.565) (1,5.630) (1.5,7.476) (2,9.147) (2.5,10.744) (3,12.251)};
-\addplot[thin, dashed, black] coordinates {(0,0) (0.25,1.673) (0.5,3.183) (0.75,4.221) (1,5.022) (1.5,6.420) (2,7.731) (2.5,9.042) (3,10.361)};
-\addplot[very thick, black] coordinates {(0,0) (0.25,1.343) (0.5,2.606) (0.75,3.602) (1,4.389) (1.5,5.668) (2,6.825) (2.5,7.987) (3,9.176)};
+\addplot[thick, quiet] coordinates {(0,0) (0.25,1.658) (0.5,3.261) (0.75,4.565) (1,5.630) (1.5,7.476) (2,9.147) (2.5,10.744) (3,12.251)};
+\addplot[thick, quiet, dashed] coordinates {(0,0) (0.25,1.673) (0.5,3.183) (0.75,4.221) (1,5.022) (1.5,6.420) (2,7.731) (2.5,9.042) (3,10.361)};
+\addplot[very thick, rider] coordinates {(0,0) (0.25,1.343) (0.5,2.606) (0.75,3.602) (1,4.389) (1.5,5.668) (2,6.825) (2.5,7.987) (3,9.176)};
 \node[font=\scriptsize, anchor=west] at (axis cs:3,12.25) {RO};
 \node[font=\scriptsize, anchor=west] at (axis cs:3,10.36) {DO};
-\node[font=\scriptsize, anchor=west] at (axis cs:3,9.0) {MID};
+\node[font=\scriptsize, anchor=west, text=rider] at (axis cs:3,9.0) {MID};
 \end{axis}
 \end{tikzpicture}
 \caption{Instance $B$ under noise. (a) Chance that the estimated matching differs from the true one, and the mean surplus lost. (b) Mean $L_1$ distance between estimated and true prices for each core point.}
@@ -272,18 +311,18 @@ The two differ, so there is no pure saddle point. If the manipulator targets rid
   xmin=0, xmax=1, ymin=0, ymax=2.2,
   xlabel={$y$ = probability the manipulator targets riders}, ylabel={expected best gain},
   grid=major, grid style={gray!25}, tick label style={font=\small}, label style={font=\small}]
-\addplot[thin, black, domain=0:1] {2-2*x};
-\addplot[thin, black, domain=0:1] {1};
-\addplot[thin, black, domain=0:1] {2*x};
-\addplot[ultra thick, black] coordinates {(0,0) (0.5,1) (1,0)};
-\fill (axis cs:0.5,1) circle (2.5pt);
+\addplot[thick, quiet, domain=0:1] {2-2*x};
+\addplot[thick, quiet, domain=0:1] {1};
+\addplot[thick, quiet, domain=0:1] {2*x};
+\addplot[ultra thick, rider] coordinates {(0,0) (0.5,1) (1,0)};
+\fill[rider] (axis cs:0.5,1) circle (2.5pt);
 \node[font=\scriptsize, anchor=south west] at (axis cs:0.02,1.9) {RO};
 \node[font=\scriptsize, anchor=south east] at (axis cs:0.98,1.9) {DO};
 \node[font=\scriptsize, anchor=south east] at (axis cs:0.98,1.0) {MID};
 \node[font=\scriptsize, anchor=south] at (axis cs:0.5,1.08) {value 1};
 \end{axis}
 \end{tikzpicture}
-\caption{Graphical method for the pricing game. The thick line is the platform's lower envelope.}
+\caption{Graphical method for the pricing game. The thick blue line is the platform's lower envelope; its peak is the value.}
 \label{fig:game}
 \end{figure}
 
