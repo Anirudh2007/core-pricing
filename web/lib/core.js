@@ -1,5 +1,7 @@
 import { bestMatching, valueOf, dropRow, dropCol } from './assignment.js'
 
+export const RULES = ['RO', 'MID', 'DO']
+
 // Shapley-Shubik: the core is the set of optimal dual solutions. Its
 // rider-optimal corner pays each rider their marginal contribution
 // V - V(without i); the driver-optimal corner does the same for drivers.

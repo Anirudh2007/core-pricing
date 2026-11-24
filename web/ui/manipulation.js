@@ -1,7 +1,7 @@
+import { RULES } from '../lib/core.js'
 import { manipulationTable, manipulationGain } from '../lib/manipulation.js'
 import { fmt } from './matrix.js'
 
-const RULES = ['RO', 'MID', 'DO']
 const SHIFTS = [-2, -1, 1, 2]
 const NAMES = { RO: 'rider-optimal', MID: 'midpoint', DO: 'driver-optimal' }
 const signed = (s) => (s > 0 ? `+${s}` : `−${-s}`)

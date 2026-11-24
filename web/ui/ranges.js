@@ -1,8 +1,14 @@
-import { corePoints } from '../lib/core.js'
+import { corePoints, RULES } from '../lib/core.js'
 import { fmt } from './matrix.js'
 import { pricesAt } from './market.js'
 
 const SIDE = { R: { fill: '#dce7f8', ink: '#1d5bbf' }, D: { fill: '#f6e5d3', ink: '#a8520a' } }
+
+function tickStep(max) {
+  if (max > 12) return 5
+  if (max > 5) return 2
+  return 1
+}
 
 function agents(p) {
   return [
@@ -40,7 +46,7 @@ export function renderRanges(root, a, t) {
   const rowH = 40
   const H = top + list.length * rowH + 28
   const x = (s) => left + (s / max) * (W - left - right)
-  const step = max > 12 ? 5 : max > 5 ? 2 : 1
+  const step = tickStep(max)
 
   let out = ''
   for (let s = 0; s <= max; s += step) {
@@ -53,13 +59,13 @@ export function renderRanges(root, a, t) {
     const c = SIDE[g.side]
     out += `<text x="0" y="${y + 4}" font-weight="600" style="fill:${c.ink}">${g.name}</text>
       <rect x="${x(lo)}" y="${y - 7}" width="${Math.max(x(hi) - x(lo), 2)}" height="14" rx="4" fill="${c.fill}"/>`
-    for (const r of ['RO', 'MID', 'DO']) {
+    for (const r of RULES) {
       out += `<line x1="${x(g[r])}" x2="${x(g[r])}" y1="${y - 7}" y2="${y + 7}" stroke="${c.ink}" stroke-width="1.5"/>`
     }
     // name the three points once per side, where the first row leaves room above
     if (k === 0 || k === p.RO.u.length) {
       let last = -Infinity
-      for (const r of ['RO', 'MID', 'DO'].sort((s, q) => g[s] - g[q])) {
+      for (const r of [...RULES].sort((s, q) => g[s] - g[q])) {
         if (x(g[r]) - last < 30) continue
         out += `<text x="${x(g[r])}" y="${y - 12}" text-anchor="middle">${r}</text>`
         last = x(g[r])

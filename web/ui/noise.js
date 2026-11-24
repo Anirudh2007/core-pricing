@@ -1,8 +1,8 @@
+import { RULES } from '../lib/core.js'
 import { noiseStudy } from '../lib/noise.js'
 import { fmt } from './matrix.js'
 
 const GRID = Array.from({ length: 13 }, (_, k) => k * 0.25)
-const RULES = ['RO', 'MID', 'DO']
 let cache = { key: '', rows: [] }
 
 // Line chart with direct labels at the line ends instead of a legend.

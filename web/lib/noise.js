@@ -1,15 +1,16 @@
 import { bestMatching } from './assignment.js'
-import { corePoints } from './core.js'
+import { corePoints, RULES } from './core.js'
 import { makeRng, normal } from './rng.js'
-
-const RULES = ['RO', 'MID', 'DO']
 
 // a predicted surplus is the true one plus Gaussian error, floored at 0
 export function estimate(a, sigma, rng) {
   return a.map((row) => row.map((x) => Math.max(x + sigma * normal(rng), 0)))
 }
 
-const l1 = (p, q) => [...p.u, ...p.v].reduce((s, x, k) => s + Math.abs(x - [...q.u, ...q.v][k]), 0)
+function l1(p, q) {
+  const y = [...q.u, ...q.v]
+  return [...p.u, ...p.v].reduce((s, x, k) => s + Math.abs(x - y[k]), 0)
+}
 
 function blocked(a, { u, v }) {
   return a.some((row, i) => row.some((x, j) => u[i] + v[j] < x - 1e-9))

@@ -19,11 +19,14 @@ function graph(W, a, pairs) {
   const n = a[0].length
   const rowH = 56
   const top = 36
-  const H = top + Math.max(m, n) * rowH
+  const most = Math.max(m, n)
+  const H = top + most * rowH
   const xr = Math.min(120, W * 0.22)
   const xd = W - xr
-  const yr = (i) => top + rowH / 2 + i * rowH + ((Math.max(m, n) - m) * rowH) / 2
-  const yd = (j) => top + rowH / 2 + j * rowH + ((Math.max(m, n) - n) * rowH) / 2
+  // the shorter column of nodes is centred against the longer one
+  const at = (k, count) => top + rowH / 2 + k * rowH + ((most - count) * rowH) / 2
+  const yr = (i) => at(i, m)
+  const yd = (j) => at(j, n)
   const hit = new Set(pairs.map(([i, j]) => `${i},${j}`))
 
   let edges = ''

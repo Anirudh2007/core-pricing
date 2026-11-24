@@ -59,6 +59,7 @@ function solveMax(N) {
 export function solveGame(M, rowGoal) {
   const sign = rowGoal === 'max' ? 1 : -1
   const g = solveMax(M.map((row) => row.map((x) => sign * x)))
+  // adding 0 turns a -0 from the sign flip into 0
   return { ...g, value: sign * g.value + 0 }
 }
 

@@ -1,5 +1,5 @@
 import { bestMatching, valueOf } from '../web/lib/assignment.js'
-import { corePoints, isInCore } from '../web/lib/core.js'
+import { corePoints, isInCore, RULES } from '../web/lib/core.js'
 import { hungarianSteps } from '../web/lib/hungarian.js'
 import { noiseStudy } from '../web/lib/noise.js'
 import { manipulationTable, manipulationGain } from '../web/lib/manipulation.js'
@@ -8,7 +8,6 @@ import { makeRng } from '../web/lib/rng.js'
 
 const A = [[10, 6], [7, 4]]
 const B = [[12, 10, 6], [11, 7, 4], [9, 11, 9]]
-const RULES = ['RO', 'MID', 'DO']
 let missed = 0
 
 const same = (x, y) => JSON.stringify(x) === JSON.stringify(y)
@@ -47,11 +46,9 @@ const widths = [...b.p.RO.u.map((x, i) => x - b.p.DO.u[i]), ...b.p.DO.v.map((x, 
 expect('B every range has width 7', widths.every((w) => w === 7))
 for (const r of RULES) expect(`B ${r} is in the core`, isInCore(B, b.p[r].u, b.p[r].v))
 
-const others = []
-for (const perm of [[0, 1, 2], [0, 2, 1], [1, 0, 2], [1, 2, 0], [2, 0, 1], [2, 1, 0]]) {
-  others.push(perm.reduce((s, j, i) => s + B[i][j], 0))
-}
-others.sort((x, y) => y - x)
+const others = [[0, 1, 2], [0, 2, 1], [1, 0, 2], [1, 2, 0], [2, 0, 1], [2, 1, 0]]
+  .map((perm) => perm.reduce((s, j, i) => s + B[i][j], 0))
+  .sort((x, y) => y - x)
 console.log(`B values of all six matchings: ${others.join(', ')}`)
 expect('B other matching values', same(others.slice(1), [28, 28, 27, 23, 22]))
 
@@ -73,8 +70,8 @@ console.log('\n3. Noise on B (4000 draws, seed 1)')
 const sigmas = [0, 0.25, 0.5, 0.75, 1, 1.5, 2, 2.5, 3]
 const rows = noiseStudy(B, sigmas, 4000, 1)
 console.log(`${pad('sigma', 6)} ${pad('pChange', 8)} ${pad('loss', 7)} ${pad('shift RO', 9)} ${pad('MID', 7)} ${pad('DO', 7)} ${pad('pBlock RO', 10)} ${pad('MID', 6)} DO`)
+const f = (x) => x.toFixed(3)
 for (const r of rows) {
-  const f = (x) => x.toFixed(3)
   console.log(`${pad(r.sigma, 6)} ${pad(f(r.pChange), 8)} ${pad(f(r.meanLoss), 7)} ${pad(f(r.shift.RO), 9)} ${pad(f(r.shift.MID), 7)} ${pad(f(r.shift.DO), 7)} ${pad(f(r.pBlock.RO), 10)} ${pad(f(r.pBlock.MID), 6)} ${f(r.pBlock.DO)}`)
 }
 const target = { 0.25: 0, 0.5: 0.05, 1: 0.3, 2: 0.53 }

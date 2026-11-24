@@ -10,15 +10,11 @@ function cover(c) {
   const n = c.length
   let best = null
   for (let mask = 0; mask < 1 << (2 * n); mask++) {
-    let ok = true
-    for (let i = 0; i < n && ok; i++) {
-      for (let j = 0; j < n && ok; j++) {
-        if (c[i][j] === 0 && !bit(mask, i) && !bit(mask, n + j)) ok = false
-      }
-    }
     let lines = 0
     for (let k = 0; k < 2 * n; k++) lines += bit(mask, k)
-    if (ok && (!best || lines < best.lines)) best = { lines, mask }
+    if (best && lines >= best.lines) continue
+    const covered = c.every((row, i) => bit(mask, i) || row.every((x, j) => x !== 0 || bit(mask, n + j)))
+    if (covered) best = { lines, mask }
   }
   const rows = Array.from({ length: n }, (_, i) => bit(best.mask, i) === 1)
   const cols = Array.from({ length: n }, (_, j) => bit(best.mask, n + j) === 1)
@@ -64,7 +60,8 @@ export function hungarianSteps(a, K = Math.max(...a.flat())) {
   }
   stages.push({ label: 'column-reduced', matrix: copy(c) })
 
-  for (let { lines, rows, cols } = cover(c); lines < n; { lines, rows, cols } = cover(c)) {
+  for (let lined = cover(c); lined.lines < n; lined = cover(c)) {
+    const { rows, cols } = lined
     let low = Infinity
     for (let i = 0; i < n; i++) {
       for (let j = 0; j < n; j++) if (!rows[i] && !cols[j]) low = Math.min(low, c[i][j])
